@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Reveal from "@/components/Reveal";
 import {
   Store,
   TrendingUp,
@@ -19,6 +20,8 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   if (user) redirect("/dashboard");
+
+  const year = new Date().getFullYear();
 
   return (
     <div className="min-h-screen bg-background text-ink overflow-x-hidden">
@@ -75,7 +78,7 @@ export default async function Home() {
 
       {/* Feature grid */}
       <section id="features" className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="text-center mb-12">
+        <Reveal className="text-center mb-12">
           <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">
             Everything a shop&apos;s daily accounts need
           </h2>
@@ -83,7 +86,7 @@ export default async function Home() {
             No spreadsheets, no confusing menus — just what a shopkeeper actually
             needs, every single day.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {[
@@ -123,67 +126,87 @@ export default async function Home() {
               desc: "No app to install. Open it in any browser, on desktop or mobile, and it just works.",
               tone: "success" as const,
             },
-          ].map(({ icon: Icon, title, desc, tone }) => (
-            <div key={title} className="card p-6">
-              <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-                  tone === "primary"
-                    ? "bg-primary-soft text-primary"
-                    : tone === "gold"
-                    ? "bg-gold-soft text-gold"
-                    : "bg-success-soft text-success"
-                }`}
-              >
-                <Icon size={19} />
+          ].map(({ icon: Icon, title, desc, tone }, i) => (
+            <Reveal key={title} delay={i * 80}>
+              <div className="card p-6 h-full">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
+                    tone === "primary"
+                      ? "bg-primary-soft text-primary"
+                      : tone === "gold"
+                      ? "bg-gold-soft text-gold"
+                      : "bg-success-soft text-success"
+                  }`}
+                >
+                  <Icon size={19} />
+                </div>
+                <h3 className="font-display font-semibold text-[15.5px] mb-1.5">{title}</h3>
+                <p className="text-[13.5px] text-ink-soft leading-relaxed">{desc}</p>
               </div>
-              <h3 className="font-display font-semibold text-[15.5px] mb-1.5">{title}</h3>
-              <p className="text-[13.5px] text-ink-soft leading-relaxed">{desc}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* How it works */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="card p-8 md:p-12 bg-surface-alt border-none">
-          <h2 className="font-display text-2xl font-semibold tracking-tight text-center mb-10">
-            Three steps, every day
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: "1", title: "Open your shop", desc: "Enter the cash in your drawer, with the time." },
-              { step: "2", title: "Log the small stuff", desc: "Tea, lunch, a quick expense — add it in seconds." },
-              { step: "3", title: "Close and see today's profit", desc: "Enter closing cash — your gross sales and profit appear instantly." },
-            ].map(({ step, title, desc }) => (
-              <div key={step} className="text-center md:text-left">
-                <div className="w-9 h-9 rounded-full bg-primary text-white font-display font-semibold flex items-center justify-center mx-auto md:mx-0 mb-4">
-                  {step}
+        <Reveal>
+          <div className="card p-8 md:p-12 bg-surface-alt border-none">
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-center mb-10">
+              Three steps, every day
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { step: "1", title: "Open your shop", desc: "Enter the cash in your drawer, with the time." },
+                { step: "2", title: "Log the small stuff", desc: "Tea, lunch, a quick expense — add it in seconds." },
+                { step: "3", title: "Close and see today's profit", desc: "Enter closing cash — your gross sales and profit appear instantly." },
+              ].map(({ step, title, desc }) => (
+                <div key={step} className="text-center md:text-left">
+                  <div className="w-9 h-9 rounded-full bg-primary text-white font-display font-semibold flex items-center justify-center mx-auto md:mx-0 mb-4">
+                    {step}
+                  </div>
+                  <h3 className="font-semibold text-[15px] mb-1.5">{title}</h3>
+                  <p className="text-[13.5px] text-ink-soft leading-relaxed">{desc}</p>
                 </div>
-                <h3 className="font-semibold text-[15px] mb-1.5">{title}</h3>
-                <p className="text-[13.5px] text-ink-soft leading-relaxed">{desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* CTA */}
-      <section className="max-w-4xl mx-auto px-6 pb-24 text-center">
-        <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight mb-3">
-          Start keeping your khata the easy way
-        </h2>
-        <p className="text-ink-soft mb-7">Free to use. Set up your shop in under two minutes.</p>
-        <Link href="/login" className="btn-primary text-[14px] px-7 py-3 inline-flex items-center gap-2">
-          Get started free <ArrowRight size={16} />
-        </Link>
-      </section>
+      <Reveal>
+        <section className="max-w-4xl mx-auto px-6 pb-24 text-center">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight mb-3">
+            Start keeping your khata the easy way
+          </h2>
+          <p className="text-ink-soft mb-7">Free to use. Set up your shop in under two minutes.</p>
+          <Link href="/login" className="btn-primary text-[14px] px-7 py-3 inline-flex items-center gap-2">
+            Get started free <ArrowRight size={16} />
+          </Link>
+        </section>
+      </Reveal>
 
+      {/* Footer */}
       <footer className="border-t border-border">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12.5px] text-ink-soft">
-          <span>© {new Date().getFullYear()} Shop Khata</span>
-          <span>Made for shopkeepers, by shopkeepers.</span>
+        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12.5px] text-ink-soft">
+          <span>Built with care for local shopkeepers.</span>
+          <div className="flex items-center gap-2 bg-primary-soft text-primary px-4 py-2 rounded-full font-medium">
+            <span>© {year} Shop Khata</span>
+            <span className="opacity-40">•</span>
+            <span>Made by SAK Council</span>
+          </div>
         </div>
       </footer>
+
+      {/* Mobile-only copyright badge — visible immediately on app open, no scrolling needed */}
+      <div className="sm:hidden fixed bottom-3 right-3 z-50">
+        <div className="flex items-center gap-1.5 bg-primary-soft text-primary text-[10.5px] font-medium px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm">
+          <span>© {year} Shop Khata</span>
+          <span className="opacity-40">•</span>
+          <span>SAK Council</span>
+        </div>
+      </div>
     </div>
   );
 }
