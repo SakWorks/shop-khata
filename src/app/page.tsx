@@ -190,7 +190,7 @@ export default async function Home() {
       {/* Footer */}
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12.5px] text-ink-soft">
-          <span>Built with care for local shopkeepers.</span>
+          <span>Smart Account, Better Future.</span>
           <div className="flex items-center gap-2 bg-primary-soft text-primary px-4 py-2 rounded-full font-medium">
             <span>© {year} Shop Khata</span>
             <span className="opacity-40">•</span>
