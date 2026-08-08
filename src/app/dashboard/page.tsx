@@ -2,14 +2,27 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { calcDay, pkr, todayKey, fmtDateLabel, ShopDay, ShopExpense, SavingsEntry } from "@/lib/calc";
+import {
+  calcDay,
+  pkr,
+  todayKey,
+  fmtDateLabel,
+  sumBreakdown,
+  ShopDay,
+  ShopExpense,
+  SavingsEntry,
+  CashBreakdownItem,
+} from "@/lib/calc";
 import { PageHeader, SectionCard, StatCard, EmptyState } from "@/components/ui";
+import { CashBreakdown } from "@/components/CashBreakdown";
 import { TrendingUp, Wallet, Receipt, X, PiggyBank, Check } from "lucide-react";
 
 function nowTime() {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
+
+const emptyRow = (): CashBreakdownItem[] => [{ label: "Cash", amount: 0 }];
 
 export default function TodayPage() {
   const supabase = createClient();
@@ -18,9 +31,9 @@ export default function TodayPage() {
   const [expenses, setExpenses] = useState<ShopExpense[]>([]);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingClose, setEditingClose] = useState(false);
-  const [openAmt, setOpenAmt] = useState("");
+  const [openBreakdown, setOpenBreakdown] = useState<CashBreakdownItem[]>(emptyRow());
   const [openTime, setOpenTime] = useState(nowTime());
-  const [closeAmt, setCloseAmt] = useState("");
+  const [closeBreakdown, setCloseBreakdown] = useState<CashBreakdownItem[]>(emptyRow());
   const [closeTime, setCloseTime] = useState(nowTime());
   const [expDesc, setExpDesc] = useState("");
   const [expAmt, setExpAmt] = useState("");
@@ -68,14 +81,42 @@ export default function TodayPage() {
     load();
   }, [load]);
 
+  function startEditOpen() {
+    setOpenBreakdown(
+      day?.opening_breakdown && day.opening_breakdown.length
+        ? day.opening_breakdown
+        : [{ label: "Cash", amount: Number(day?.opening_amount || 0) }]
+    );
+    setOpenTime(day?.opening_time || nowTime());
+    setEditingOpen(true);
+  }
+
+  function startEditClose() {
+    setCloseBreakdown(
+      day?.closing_breakdown && day.closing_breakdown.length
+        ? day.closing_breakdown
+        : [{ label: "Cash", amount: Number(day?.closing_amount || 0) }]
+    );
+    setCloseTime(day?.closing_time || nowTime());
+    setEditingClose(true);
+  }
+
   async function saveOpening() {
-    if (!openAmt) return;
+    const valid = openBreakdown.filter((i) => i.label.trim() && i.amount);
+    const total = sumBreakdown(valid);
+    if (!total) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data, error } = await supabase
       .from("shop_days")
       .upsert(
-        { user_id: user.id, date: todayKey(), opening_time: openTime, opening_amount: Number(openAmt) },
+        {
+          user_id: user.id,
+          date: todayKey(),
+          opening_time: openTime,
+          opening_amount: total,
+          opening_breakdown: valid,
+        },
         { onConflict: "user_id,date" }
       )
       .select()
@@ -83,22 +124,22 @@ export default function TodayPage() {
     if (!error) {
       setDay(data);
       setEditingOpen(false);
-      setOpenAmt("");
     }
   }
 
   async function saveClosing() {
-    if (!closeAmt || !day) return;
+    const valid = closeBreakdown.filter((i) => i.label.trim() && i.amount);
+    const total = sumBreakdown(valid);
+    if (!total || !day) return;
     const { data, error } = await supabase
       .from("shop_days")
-      .update({ closing_time: closeTime, closing_amount: Number(closeAmt) })
+      .update({ closing_time: closeTime, closing_amount: total, closing_breakdown: valid })
       .eq("id", day.id)
       .select()
       .single();
     if (!error) {
       setDay(data);
       setEditingClose(false);
-      setCloseAmt("");
     }
   }
 
@@ -176,26 +217,37 @@ export default function TodayPage() {
 
       <SectionCard title="Opening cash">
         {calc.hasOpening && !editingOpen ? (
-          <div className="flex items-center justify-between">
-            <p className="text-sm">
-              Opened at <span className="font-medium">{day?.opening_time}</span> with{" "}
-              <span className="font-mono font-semibold">{pkr(calc.opening)}</span>
-            </p>
-            <button className="btn-secondary text-[12.5px] py-1.5 px-3" onClick={() => { setEditingOpen(true); setOpenAmt(String(calc.opening)); setOpenTime(day?.opening_time || nowTime()); }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm mb-1.5">
+                Opened at <span className="font-medium">{day?.opening_time}</span>
+              </p>
+              {day?.opening_breakdown && day.opening_breakdown.length ? (
+                <div className="space-y-0.5">
+                  {day.opening_breakdown.map((item, i) => (
+                    <p key={i} className="text-[13px] text-ink-soft">
+                      {item.label}: <span className="font-mono text-ink">{pkr(item.amount)}</span>
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+              <p className="text-sm font-semibold mt-1.5">
+                Total: <span className="font-mono">{pkr(calc.opening)}</span>
+              </p>
+            </div>
+            <button className="btn-secondary text-[12.5px] py-1.5 px-3" onClick={startEditOpen}>
               Edit
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-3 items-end">
-            <div className="w-32">
+          <div>
+            <div className="w-36 mb-3">
               <label className="label block mb-1.5">Time</label>
               <input type="time" className="input" value={openTime} onChange={(e) => setOpenTime(e.target.value)} />
             </div>
-            <div className="flex-1 min-w-[140px]">
-              <label className="label block mb-1.5">Cash in drawer (Rs)</label>
-              <input type="number" className="input" placeholder="e.g. 2000" value={openAmt} onChange={(e) => setOpenAmt(e.target.value)} />
-            </div>
-            <button className="btn-primary" onClick={saveOpening}>Save opening</button>
+            <label className="label block mb-1.5">Cash in drawer, by type</label>
+            <CashBreakdown items={openBreakdown} onChange={setOpenBreakdown} />
+            <button className="btn-primary mt-3" onClick={saveOpening}>Save opening</button>
           </div>
         )}
       </SectionCard>
@@ -204,26 +256,37 @@ export default function TodayPage() {
         {!calc.hasOpening ? (
           <p className="text-sm text-ink-soft">Enter today&apos;s opening amount first.</p>
         ) : calc.hasClosing && !editingClose ? (
-          <div className="flex items-center justify-between">
-            <p className="text-sm">
-              Closed at <span className="font-medium">{day?.closing_time}</span> with{" "}
-              <span className="font-mono font-semibold">{pkr(calc.closing)}</span>
-            </p>
-            <button className="btn-secondary text-[12.5px] py-1.5 px-3" onClick={() => { setEditingClose(true); setCloseAmt(String(calc.closing)); setCloseTime(day?.closing_time || nowTime()); }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm mb-1.5">
+                Closed at <span className="font-medium">{day?.closing_time}</span>
+              </p>
+              {day?.closing_breakdown && day.closing_breakdown.length ? (
+                <div className="space-y-0.5">
+                  {day.closing_breakdown.map((item, i) => (
+                    <p key={i} className="text-[13px] text-ink-soft">
+                      {item.label}: <span className="font-mono text-ink">{pkr(item.amount)}</span>
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+              <p className="text-sm font-semibold mt-1.5">
+                Total: <span className="font-mono">{pkr(calc.closing)}</span>
+              </p>
+            </div>
+            <button className="btn-secondary text-[12.5px] py-1.5 px-3" onClick={startEditClose}>
               Edit
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-3 items-end">
-            <div className="w-32">
+          <div>
+            <div className="w-36 mb-3">
               <label className="label block mb-1.5">Time</label>
               <input type="time" className="input" value={closeTime} onChange={(e) => setCloseTime(e.target.value)} />
             </div>
-            <div className="flex-1 min-w-[140px]">
-              <label className="label block mb-1.5">Cash in drawer (Rs)</label>
-              <input type="number" className="input" placeholder="e.g. 5400" value={closeAmt} onChange={(e) => setCloseAmt(e.target.value)} />
-            </div>
-            <button className="btn-primary" onClick={saveClosing}>Save closing</button>
+            <label className="label block mb-1.5">Cash in drawer, by type</label>
+            <CashBreakdown items={closeBreakdown} onChange={setCloseBreakdown} />
+            <button className="btn-primary mt-3" onClick={saveClosing}>Save closing</button>
           </div>
         )}
       </SectionCard>

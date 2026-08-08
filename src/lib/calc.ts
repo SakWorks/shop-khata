@@ -1,3 +1,8 @@
+export type CashBreakdownItem = {
+  label: string;
+  amount: number;
+};
+
 export type ShopDay = {
   id: string;
   date: string;
@@ -5,6 +10,8 @@ export type ShopDay = {
   opening_amount: number | null;
   closing_time: string | null;
   closing_amount: number | null;
+  opening_breakdown?: CashBreakdownItem[] | null;
+  closing_breakdown?: CashBreakdownItem[] | null;
 };
 
 export type ShopExpense = {
@@ -15,13 +22,19 @@ export type ShopExpense = {
   time: string | null;
 };
 
-
 export type SavingsEntry = {
   id: string;
   date: string;
   profit: number;
   percentage: number;
   amount: number;
+};
+
+export type KameetiEntry = {
+  id: string;
+  entry_date: string;
+  amount: number;
+  note: string | null;
 };
 
 export type DayCalc = {
@@ -88,10 +101,18 @@ export function monthLabel(mKey: string): string {
   return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
+export function sumBreakdown(items: CashBreakdownItem[]): number {
+  return items.reduce((a, i) => a + (Number(i.amount) || 0), 0);
+}
+
 export function last10Days(): string[] {
+  return lastNDays(10);
+}
+
+export function lastNDays(n: number): string[] {
   const arr: string[] = [];
   const base = new Date();
-  for (let i = 9; i >= 0; i--) {
+  for (let i = n - 1; i >= 0; i--) {
     const d = new Date(base);
     d.setDate(base.getDate() - i);
     arr.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -100,5 +121,3 @@ export function last10Days(): string[] {
   }
   return arr;
 }
-
-

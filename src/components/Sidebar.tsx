@@ -9,6 +9,7 @@ import {
   Receipt,
   Boxes,
   PiggyBank,
+  HandCoins,
   Settings,
   Store,
   LogOut,
@@ -20,6 +21,7 @@ const NAV = [
   { href: "/dashboard/bills", label: "Monthly Bills", icon: Receipt },
   { href: "/dashboard/inventory", label: "Inventory", icon: Boxes },
   { href: "/dashboard/savings", label: "Savings", icon: PiggyBank },
+  { href: "/dashboard/kameeti", label: "Kameeti", icon: HandCoins },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
