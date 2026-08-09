@@ -29,6 +29,16 @@ const presetRows = (): CashBreakdownItem[] => [
   { label: "Bank Account", amount: 0 },
 ];
 
+/** Consistent color per payment type across Opening/Closing breakdown rows. */
+function paymentColor(label: string): string {
+  const key = label.trim().toLowerCase();
+  if (key === "cash") return "text-purple-600";
+  if (key === "jazzcash") return "text-orange-600";
+  if (key === "easypaisa") return "text-green-600";
+  if (key === "bank account") return "text-blue-600";
+  return "text-ink-soft";
+}
+
 /**
  * Always shows the four permanent rows (Cash, JazzCash, EasyPaisa, Bank
  * Account) first — filling in saved amounts where they exist — then appends
@@ -301,9 +311,9 @@ export default function TodayPage() {
                 {(day?.opening_breakdown || [])
                   .filter((i) => i.amount > 0)
                   .map((i) => (
-                    <div key={i.label} className="flex items-center justify-between text-[12px] text-ink-soft py-0.5">
-                      <span>{i.label}</span>
-                      <span className="font-mono">{pkr(i.amount)}</span>
+                    <div key={i.label} className="flex items-center justify-between text-[12px] py-0.5">
+                      <span className={`font-medium ${paymentColor(i.label)}`}>{i.label}</span>
+                      <span className={`font-mono ${paymentColor(i.label)}`}>{pkr(i.amount)}</span>
                     </div>
                   ))}
                 <p className="font-mono font-bold text-[15px] mt-1.5">{pkr(calc.opening)}</p>
@@ -333,9 +343,9 @@ export default function TodayPage() {
                 {(day?.closing_breakdown || [])
                   .filter((i) => i.amount > 0)
                   .map((i) => (
-                    <div key={i.label} className="flex items-center justify-between text-[12px] text-ink-soft py-0.5">
-                      <span>{i.label}</span>
-                      <span className="font-mono">{pkr(i.amount)}</span>
+                    <div key={i.label} className="flex items-center justify-between text-[12px] py-0.5">
+                      <span className={`font-medium ${paymentColor(i.label)}`}>{i.label}</span>
+                      <span className={`font-mono ${paymentColor(i.label)}`}>{pkr(i.amount)}</span>
                     </div>
                   ))}
                 <p className="font-mono font-bold text-[15px] mt-1.5">{pkr(calc.closing)}</p>

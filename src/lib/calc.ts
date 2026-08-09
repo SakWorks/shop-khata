@@ -35,6 +35,7 @@ export type KameetiEntry = {
   entry_date: string;
   amount: number;
   note: string | null;
+  name: string | null;
 };
 
 export type DayCalc = {

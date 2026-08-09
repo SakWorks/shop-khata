@@ -7,6 +7,19 @@ import { Store, Mail, Lock, User, MapPin, Loader2, CheckCircle2 } from "lucide-r
 
 type Mode = "login" | "signup" | "check-email";
 
+// Set right before redirecting to the dashboard after a real sign-in.
+// FatherWelcome.tsx consumes (reads + clears) this flag once, so the
+// welcome overlay only ever appears right after an actual login — never
+// on a plain page reload of an already-open dashboard tab.
+const JUST_LOGGED_IN_KEY = "shopkhata_just_logged_in";
+function markJustLoggedIn() {
+  try {
+    sessionStorage.setItem(JUST_LOGGED_IN_KEY, "1");
+  } catch {
+    // storage unavailable — harmless, the welcome overlay just won't show
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -42,6 +55,7 @@ export default function LoginPage() {
       }
       return setError(error.message);
     }
+    markJustLoggedIn();
     router.push("/dashboard");
     router.refresh();
   }
@@ -77,6 +91,7 @@ export default function LoginPage() {
     }
 
     if (data.session) {
+      markJustLoggedIn();
       router.push("/dashboard");
       router.refresh();
     } else {
