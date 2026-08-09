@@ -104,7 +104,7 @@ export default function FatherWelcome({ email }: FatherWelcomeProps) {
 
           {/* TEXT — each line staggers in on its own beat */}
           <div className="content">
-            <div className="eyebrow line line-1">A SPECIAL MESSAGE FROM SAK COUCIL</div>
+            <div className="eyebrow line line-1">A SPECIAL MESSAGE FROM SAK COUNCIL</div>
 
             <h2 className="line line-2">
               Welcome, Dad <span>❤️</span>
